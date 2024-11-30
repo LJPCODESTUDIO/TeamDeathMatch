@@ -17,7 +17,7 @@ namespace TeamDeathMatch
     {
         public override string NAME => "TeamDeathMatch";
         public override string AUTHOR => "LJP";
-        public override string VERSION => "1.1";
+        public override string VERSION => "1.2";
 
 
         private bool gameRunning = false;
@@ -48,10 +48,10 @@ namespace TeamDeathMatch
                     new DisplayTextPacket("matchTimer", $"{timer}", Color.white, new Vector3(-1, 0, 2), true, true, 1)
                 );
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("teamOneScore", $"{teamOneScore}", Color.blue, new Vector3(-1, -2, 2), true, true, 1)
+                    new DisplayTextPacket("teamOneScore", $"{teamOneScore}", Color.blue, new Vector3(-1, -1, 2), true, true, 1)
                 );
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("teamTwoScore", $"{teamTwoScore}", Color.red, new Vector3(-1, 2, 2), true, true, 1)
+                    new DisplayTextPacket("teamTwoScore", $"{teamTwoScore}", Color.red, new Vector3(-1, 1, 2), true, true, 1)
                 );
 
                 List<ClientData> tempTeam = teamOne.ToList();
@@ -59,7 +59,7 @@ namespace TeamDeathMatch
                 foreach (ClientData client in tempTeam)
                 {
                     position = client.player.Position;
-                    position.y += 3.5f;
+                    position.y += 2.5f;
                     ModManager.serverInstance.netamiteServer.SendToAll(
                         new DisplayTextPacket(client.ClientId.ToString(), $"Team One", Color.blue, position, true, false, 1)
                     );
@@ -69,7 +69,7 @@ namespace TeamDeathMatch
                 foreach (ClientData client in tempTeam)
                 {
                     position = client.player.Position;
-                    position.y += 3.5f;
+                    position.y += 2.5f;
                     ModManager.serverInstance.netamiteServer.SendToAll(
                         new DisplayTextPacket(client.ClientId.ToString(), $"Team Two", Color.red, position, true, false, 1)
                     );
@@ -143,12 +143,13 @@ namespace TeamDeathMatch
                 ModManager.serverInstance.netamiteServer.SendToAll(
                     new DisplayTextPacket("playerCount", message, Color.white, Vector3.forward * 2, true, true, 5)
                 );
-            }
 
-            if (ModManager.serverInstance.connectedClients >= config.REQUIRED_PLAYER_COUNT)
-            {
-                Thread startGame = new Thread(StartGame);
-                startGame.Start();
+                if (ModManager.serverInstance.connectedClients >= config.REQUIRED_PLAYER_COUNT)
+                {
+                    Thread.Sleep(5000);
+                    Thread startGame = new Thread(StartGame);
+                    startGame.Start();
+                }
             }
         }
 
@@ -211,10 +212,6 @@ namespace TeamDeathMatch
                 Thread.Sleep(1000);
                 timer--;
             }
-
-            ModManager.serverInstance.netamiteServer.SendToAll(
-                new DisplayTextPacket("matchBegin", "Match is starting!", Color.white, Vector3.forward * 2, true, true, 1)
-            );
 
             teamOne.Clear();
             teamTwo.Clear();
