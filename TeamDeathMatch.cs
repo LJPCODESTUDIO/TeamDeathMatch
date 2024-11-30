@@ -17,7 +17,7 @@ namespace TeamDeathMatch
     {
         public override string NAME => "TeamDeathMatch";
         public override string AUTHOR => "LJP";
-        public override string VERSION => "1.0";
+        public override string VERSION => "1.1";
 
 
         private bool gameRunning = false;
@@ -42,53 +42,60 @@ namespace TeamDeathMatch
         private void MatchTimer()
         {
             float timer = config.matchTime;
-            Vector3 messagePos = new Vector3();
             while (timer > 0)
             {
-                float minutes = timer / 60;
-                float seconds = timer - (minutes * 60);
-                messagePos = Vector3.zero;
-                messagePos += Vector3.forward * 2;
-                messagePos += Vector3.up * 2;
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", $"Match will end in {minutes}:{seconds}.", Color.white, messagePos, true, true, 1)
+                    new DisplayTextPacket("matchTimer", $"{timer}", Color.white, new Vector3(-1, 0, 2), true, true, 1)
                 );
-                messagePos = Vector3.zero;
-                messagePos += Vector3.forward * 2;
-                messagePos += Vector3.up * 2;
-                messagePos += Vector3.left * 2;
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", $"{teamOneScore}", Color.blue, messagePos, true, true, 1)
+                    new DisplayTextPacket("teamOneScore", $"{teamOneScore}", Color.blue, new Vector3(-1, -2, 2), true, true, 1)
                 );
-                messagePos = Vector3.zero;
-                messagePos += Vector3.forward * 2;
-                messagePos += Vector3.up * 2;
-                messagePos += Vector3.right * 2;
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", $"{teamOneScore}", Color.red, messagePos, true, true, 1)
+                    new DisplayTextPacket("teamTwoScore", $"{teamTwoScore}", Color.red, new Vector3(-1, 2, 2), true, true, 1)
                 );
+
+                List<ClientData> tempTeam = teamOne.ToList();
+                Vector3 position = new Vector3();
+                foreach (ClientData client in tempTeam)
+                {
+                    position = client.player.Position;
+                    position.y += 3.5f;
+                    ModManager.serverInstance.netamiteServer.SendToAll(
+                        new DisplayTextPacket(client.ClientId.ToString(), $"Team One", Color.blue, position, true, false, 1)
+                    );
+                }
+                tempTeam.Clear();
+                tempTeam = teamTwo.ToList();
+                foreach (ClientData client in tempTeam)
+                {
+                    position = client.player.Position;
+                    position.y += 3.5f;
+                    ModManager.serverInstance.netamiteServer.SendToAll(
+                        new DisplayTextPacket(client.ClientId.ToString(), $"Team Two", Color.red, position, true, false, 1)
+                    );
+                }
+
                 Thread.Sleep(1000);
                 timer--;
             }
-            messagePos = Vector3.zero;
-            messagePos += Vector3.forward * 2;
+
             gameRunning = false;
             if (teamOneScore > teamTwoScore)
             {
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", $"Team One has won!", Color.white, messagePos, true, true, 5)
+                    new DisplayTextPacket("winner", $"Team One has won!", Color.blue, new Vector3(0, 0, 2), true, true, 5)
                 );
             }
             else if (teamTwoScore > teamOneScore)
             {
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", $"Team One has won!", Color.white, Vector3.zero, true, true, 5)
+                    new DisplayTextPacket("winner", $"Team Two has won!", Color.red, new Vector3(0, 0, 2), true, true, 5)
                 );
             }
             else
             {
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", "It's a tie!", Color.white, Vector3.zero, true, true, 5)
+                    new DisplayTextPacket("winner", "It's a tie!", Color.white, new Vector3(0, 0, 2), true, true, 5)
                 );
             }
 
@@ -134,7 +141,7 @@ namespace TeamDeathMatch
                 client.SetInvulnerable(true);
                 string message = $"{client.ClientName} has joined!\nPlayers: {players.Count}/{config.REQUIRED_PLAYER_COUNT}";
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", message, Color.white, Vector3.forward * 2, true, true, 5)
+                    new DisplayTextPacket("playerCount", message, Color.white, Vector3.forward * 2, true, true, 5)
                 );
             }
 
@@ -169,24 +176,27 @@ namespace TeamDeathMatch
 
         public void OnPlayerKilled(ClientData killed, ClientData killer)
         {
-            // If on same team, take away one point
-            if (teamOne.Contains(killed) && teamOne.Contains(killer))
+            if (gameRunning)
             {
-                teamOneScore--;
-            }
-            if (teamTwo.Contains(killed) && teamTwo.Contains(killer))
-            {
-                teamTwoScore--;
-            }
+                // If on same team, take away one point
+                if (teamOne.Contains(killed) && teamOne.Contains(killer))
+                {
+                    teamOneScore--;
+                }
+                if (teamTwo.Contains(killed) && teamTwo.Contains(killer))
+                {
+                    teamTwoScore--;
+                }
 
-            // If on different teams, give one point
-            if (teamOne.Contains(killed) && teamTwo.Contains(killer))
-            {
-                teamTwoScore++;
-            }
-            if (teamTwo.Contains(killed) && teamOne.Contains(killer))
-            {
-                teamOneScore++;
+                // If on different teams, give one point
+                if (teamOne.Contains(killed) && teamTwo.Contains(killer))
+                {
+                    teamTwoScore++;
+                }
+                if (teamTwo.Contains(killed) && teamOne.Contains(killer))
+                {
+                    teamOneScore++;
+                }
             }
         }
 
@@ -196,14 +206,14 @@ namespace TeamDeathMatch
             while (timer > 0.0f)
             {
                 ModManager.serverInstance.netamiteServer.SendToAll(
-                    new DisplayTextPacket("say", $"Match will start in {timer} seconds.", Color.white, Vector3.forward * 2, true, true, 1)
+                    new DisplayTextPacket("intermission", $"Match will start in {timer} seconds.", Color.white, new Vector3(-1, 0, 2), true, true, 1)
                 );
                 Thread.Sleep(1000);
                 timer--;
             }
 
             ModManager.serverInstance.netamiteServer.SendToAll(
-                new DisplayTextPacket("say", "Match is starting!", Color.white, Vector3.forward * 2, true, true, 1)
+                new DisplayTextPacket("matchBegin", "Match is starting!", Color.white, Vector3.forward * 2, true, true, 1)
             );
 
             teamOne.Clear();
@@ -217,14 +227,20 @@ namespace TeamDeathMatch
             for (int i = 0; i < roughlyHalf; i++)
             {
                 teamOne.Add(players[i]);
-                players[i].ShowText("say", "You are on Team One.", Color.blue, displayTime: 1);
+                ModManager.serverInstance.netamiteServer.SendTo(
+                    players[i].ClientId,
+                    new DisplayTextPacket("teamOneNotify", "You are on Team One.", Color.blue, Vector3.forward * 2, true, true, 5)
+                );
                 message += "- " + players[i].ClientName + "\n";
             }
             message += "Team 2:\n";
             for (int i = roughlyHalf; i < players.Count; i++)
             {
                 teamTwo.Add(players[i]);
-                players[i].ShowText("say", "You are on Team Two.", Color.red, displayTime: 1);
+                ModManager.serverInstance.netamiteServer.SendTo(
+                    players[i].ClientId,
+                    new DisplayTextPacket("teamTwoNotify", "You are on Team Two.", Color.red, Vector3.forward * 2, true, true, 5)
+                );
                 message += "- " + players[i].ClientName + "\n";
             }
             foreach(ClientData client in players)
