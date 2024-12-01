@@ -33,7 +33,7 @@ namespace TeamDeathMatch
 
         internal class TeamDeathMatchConfig : PluginConfig
         {
-            public int REQUIRED_PLAYER_COUNT = 2;
+            public int requiredPlayerCount = 2;
             public float matchTime = 300.0f;
             public float intermissionTimer = 10.0f;
         }
@@ -100,7 +100,7 @@ namespace TeamDeathMatch
             }
 
             Thread.Sleep(5000);
-            if (ModManager.serverInstance.connectedClients >= config.REQUIRED_PLAYER_COUNT)
+            if (ModManager.serverInstance.connectedClients >= config.requiredPlayerCount)
             {
                 Thread startGame = new Thread(StartGame);
                 startGame.Start();
@@ -139,12 +139,12 @@ namespace TeamDeathMatch
             else
             {
                 client.SetInvulnerable(true);
-                string message = $"{client.ClientName} has joined!\nPlayers: {players.Count}/{config.REQUIRED_PLAYER_COUNT}";
+                string message = $"{client.ClientName} has joined!\nPlayers: {players.Count}/{config.requiredPlayerCount}";
                 ModManager.serverInstance.netamiteServer.SendToAll(
                     new DisplayTextPacket("playerCount", message, Color.white, Vector3.forward * 2, true, true, 5)
                 );
 
-                if (ModManager.serverInstance.connectedClients >= config.REQUIRED_PLAYER_COUNT)
+                if (ModManager.serverInstance.connectedClients >= config.requiredPlayerCount)
                 {
                     Thread.Sleep(5000);
                     Thread startGame = new Thread(StartGame);
